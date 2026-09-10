@@ -338,7 +338,7 @@ export const TelegramAlertModal: React.FC<TelegramAlertModalProps> = ({
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                   <span className="text-slate-300">Target Bot: <strong className="text-sky-400 font-mono">@arthapulseAi_bot</strong></span>
                   <span className="text-slate-500">•</span>
-                  <span className="text-slate-400">Chat ID: <strong className="text-emerald-400 font-mono">{chatId}</strong></span>
+                  <span className="text-slate-400">Recipient: <strong className="text-emerald-400 font-mono">{chatId}</strong> (Ganesh Katla • <span className="text-sky-300 font-mono">ganeshreddykatla321@gmail.com</span>)</span>
                 </div>
                 <a
                   href="https://t.me/arthapulseAi_bot"

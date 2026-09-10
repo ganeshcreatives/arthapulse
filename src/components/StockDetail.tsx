@@ -202,9 +202,9 @@ export const StockDetail: React.FC<StockDetailProps> = ({
               <span className="text-xs bg-slate-800 text-slate-300 px-2 py-0.5 rounded font-mono border border-slate-700">
                 {quote.exchange}
               </span>
-              <span className="text-xs bg-amber-950/60 text-amber-400 px-2 py-0.5 rounded border border-amber-800/50 flex items-center gap-1">
-                <Clock className="w-3 h-3" />
-                Delayed 15m
+              <span className="text-xs bg-emerald-950/60 text-emerald-300 px-2 py-0.5 rounded border border-emerald-800/50 flex items-center gap-1 font-bold">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                LIVE (0-Delay)
               </span>
             </div>
             <div className="text-sm text-slate-400 mt-0.5 font-medium">

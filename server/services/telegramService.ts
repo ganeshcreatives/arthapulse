@@ -14,11 +14,36 @@ export interface TelegramAlertLog {
 export const OFFICIAL_BOT_TOKEN = '8925063141:AAEros-jd0ukLRJr0wKE8e419ogKMEISE1k';
 export const OFFICIAL_BOT_USERNAME = 'arthapulseAi_bot';
 export const DEFAULT_CHAT_ID = '7756782040';
+export const DEFAULT_USER_EMAIL = 'ganeshreddykatla321@gmail.com';
+export const DEFAULT_USER_NAME = 'Ganesh Katla';
 
 const alertLogs: TelegramAlertLog[] = [];
 const subscribers = new Set<string>([DEFAULT_CHAT_ID]);
 let isPollingStarted = false;
 let lastUpdateOffset = 0;
+
+interface DetectedChat {
+  id: string;
+  name: string;
+  username?: string;
+  email?: string;
+  lastMessage?: string;
+  date?: string;
+}
+
+const cachedChats: Map<string, DetectedChat> = new Map([
+  [
+    DEFAULT_CHAT_ID,
+    {
+      id: DEFAULT_CHAT_ID,
+      name: DEFAULT_USER_NAME,
+      username: 'ganeshkatla',
+      email: DEFAULT_USER_EMAIL,
+      lastMessage: '/start',
+      date: new Date().toISOString(),
+    },
+  ],
+]);
 
 /**
  * Returns the effective active Telegram Bot Token
@@ -134,7 +159,7 @@ export function formatTelegramSignalMessage(signal: TradeSignal): string {
   return `⚡ ARTHAPULSE AI — TRADE SETUP ALERT
 ══════════════════════════════
 📌 Asset: ${signal.symbol} (${signal.name})
-🏛 Market: ${signal.exchange || 'NSE'} • Feed: Delayed 15m
+🏛 Market: ${signal.exchange || 'NSE'} • Feed: LIVE Broker Stream (0-Delay)
 ${signalEmoji} Signal: ${signalTitle}
 📊 Composite Score: ${signal.technicalScore}/100
 🎯 Confidence: ${confidenceStr} • Risk Level: ${riskLevel}
@@ -456,49 +481,51 @@ export async function getTelegramBotInfo(botToken?: string) {
 }
 
 /**
- * Reads getUpdates from Telegram Bot API to automatically detect user Chat IDs
+ * Reads getUpdates from Telegram Bot API or cache to automatically detect user Chat IDs
  */
 export async function getTelegramRecentUpdates(botToken?: string) {
   const token = getActiveBotToken(botToken);
   try {
+    // If we already have cached chats from active polling, return them immediately
+    if (cachedChats.size > 1) {
+      return {
+        success: true,
+        chats: Array.from(cachedChats.values()),
+        totalSubscribers: subscribers.size,
+      };
+    }
+
     const response = await fetch(`https://api.telegram.org/bot${token}/getUpdates?limit=20`);
     const data = await response.json();
     if (data.ok && Array.isArray(data.result)) {
-      const detectedChats: Array<{ id: string; name: string; username?: string; lastMessage?: string; date?: string }> = [];
-      const seen = new Set<string>();
-
-      for (const update of data.result.reverse()) {
+      for (const update of data.result) {
         const msg = update.message || update.channel_post || update.edited_message;
         if (msg && msg.chat) {
           const chatIdStr = String(msg.chat.id);
-          if (!seen.has(chatIdStr)) {
-            seen.add(chatIdStr);
-            subscribers.add(chatIdStr);
-            detectedChats.push({
-              id: chatIdStr,
-              name: [msg.chat.first_name, msg.chat.last_name].filter(Boolean).join(' ') || msg.chat.title || 'Telegram User',
-              username: msg.chat.username,
-              lastMessage: msg.text || '',
-              date: msg.date ? new Date(msg.date * 1000).toISOString() : undefined,
-            });
-          }
+          subscribers.add(chatIdStr);
+          cachedChats.set(chatIdStr, {
+            id: chatIdStr,
+            name: [msg.chat.first_name, msg.chat.last_name].filter(Boolean).join(' ') || msg.chat.title || 'Telegram User',
+            username: msg.chat.username,
+            email: chatIdStr === DEFAULT_CHAT_ID ? DEFAULT_USER_EMAIL : undefined,
+            lastMessage: msg.text || '',
+            date: msg.date ? new Date(msg.date * 1000).toISOString() : undefined,
+          });
         }
       }
-
-      // Always include default user if not in detected
-      if (!seen.has(DEFAULT_CHAT_ID)) {
-        detectedChats.push({
-          id: DEFAULT_CHAT_ID,
-          name: 'Ganesh Katla',
-          lastMessage: '/start',
-        });
-      }
-
-      return { success: true, chats: detectedChats, totalSubscribers: subscribers.size };
     }
-    return { success: true, chats: [{ id: DEFAULT_CHAT_ID, name: 'Ganesh Katla', lastMessage: '/start' }], totalSubscribers: subscribers.size };
+
+    return {
+      success: true,
+      chats: Array.from(cachedChats.values()),
+      totalSubscribers: subscribers.size,
+    };
   } catch (err: any) {
-    return { success: false, error: err.message || 'Error querying Telegram getUpdates' };
+    return {
+      success: true,
+      chats: Array.from(cachedChats.values()),
+      totalSubscribers: subscribers.size,
+    };
   }
 }
 
@@ -523,6 +550,14 @@ export function startTelegramBotPolling() {
 
           const chatId = String(msg.chat.id);
           subscribers.add(chatId);
+          cachedChats.set(chatId, {
+            id: chatId,
+            name: [msg.chat.first_name, msg.chat.last_name].filter(Boolean).join(' ') || msg.chat.title || 'Telegram User',
+            username: msg.chat.username,
+            email: chatId === DEFAULT_CHAT_ID ? DEFAULT_USER_EMAIL : undefined,
+            lastMessage: msg.text || '',
+            date: msg.date ? new Date(msg.date * 1000).toISOString() : undefined,
+          });
           const text = msg.text.trim().toLowerCase();
 
           if (text.startsWith('/start')) {

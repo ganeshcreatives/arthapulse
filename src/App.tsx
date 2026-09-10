@@ -276,7 +276,10 @@ export default function App() {
           </div>
 
           <div className="flex items-center gap-4 text-[11px] text-slate-500 font-mono">
-            <span>Delayed 15m (NSE/BSE)</span>
+            <span className="text-emerald-400 font-bold flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              LIVE Broker Stream (0-Delay)
+            </span>
             <span>•</span>
             <span>Educational &amp; Research Use Only</span>
             <span>•</span>

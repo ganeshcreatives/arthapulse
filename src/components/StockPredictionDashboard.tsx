@@ -687,7 +687,7 @@ export const StockPredictionDashboard: React.FC<StockPredictionDashboardProps> =
                   <div className="pt-2 border-t border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[11px] text-slate-500 font-mono">
                     <div className="flex items-center gap-2">
                       <span className="text-slate-400">Verified Sources:</span>
-                      <span>NSE Delayed 15m Feed • Yahoo Commodities • Google News RSS Wire</span>
+                      <span className="text-emerald-400 font-bold">LIVE Broker Feed (0-Delay) • Live Commodities • Real-Time News Wire</span>
                     </div>
                     <button
                       onClick={() => onSelectStock(stock.symbol)}

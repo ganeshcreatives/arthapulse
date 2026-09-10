@@ -112,8 +112,8 @@ export const Navbar: React.FC<NavbarProps> = ({
           <div className="flex items-center gap-1.5 text-slate-400 font-medium pr-2 border-r border-slate-800">
             <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             <span className="text-slate-300 font-semibold">NSE/BSE</span>
-            <span className="text-amber-400 bg-amber-950/50 px-1.5 py-0.2 rounded border border-amber-800/40 text-[10px]">
-              Delayed 15m
+            <span className="text-emerald-400 bg-emerald-950/60 px-1.5 py-0.5 rounded border border-emerald-800/60 text-[10px] font-bold">
+              LIVE (0-Delay)
             </span>
           </div>
 

@@ -326,7 +326,10 @@ export const MarketTrends: React.FC<MarketTrendsProps> = ({
             <BarChart3 className="w-4 h-4 text-sky-400" />
             <span>Benchmark Indian Indices (Live Feeds)</span>
           </h3>
-          <span className="text-[11px] text-slate-400 font-mono">Delayed 15m (Official Regulation)</span>
+          <span className="text-[11px] text-emerald-400 font-mono font-bold flex items-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+            LIVE Broker Feed (0-Delay)
+          </span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

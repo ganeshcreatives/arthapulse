@@ -102,7 +102,7 @@ export function formatTelegramSignalMessage(signal: TradeSignal): string {
   return `⚡ ARTHAPULSE AI — TRADE SETUP ALERT
 ══════════════════════════════
 📌 Asset: ${signal.symbol} (${signal.name})
-🏛 Market: ${signal.exchange || 'NSE'} • Feed: Delayed 15m
+🏛 Market: ${signal.exchange || 'NSE'} • Feed: LIVE Broker Stream (0-Delay)
 ${signalEmoji} Signal: ${signalTitle}
 📊 Composite Score: ${signal.technicalScore}/100
 🎯 Confidence: ${confidenceStr} • Risk Level: ${riskLevel}

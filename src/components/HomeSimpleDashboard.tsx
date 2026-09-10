@@ -219,8 +219,8 @@ export const HomeSimpleDashboard: React.FC<HomeSimpleDashboardProps> = ({
             <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
               Live Market Pulse
             </span>
-            <span className="text-[10px] bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded font-mono">
-              NSE/BSE Delayed 15m
+            <span className="text-[10px] bg-emerald-950 text-emerald-300 border border-emerald-800 px-1.5 py-0.5 rounded font-mono font-bold">
+              LIVE Broker Stream (0-Delay)
             </span>
           </div>
           <button

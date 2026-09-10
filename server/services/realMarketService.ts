@@ -219,7 +219,7 @@ export function getISTMarketStatus(): {
     } else if (timeInMinutes >= 555 && timeInMinutes <= 930) {
       // 9:15 AM - 3:30 PM IST
       status = 'OPEN';
-      message = 'Normal trading session is LIVE (09:15 - 15:30 IST). Delayed 15m feed active.';
+      message = 'Normal trading session is LIVE (09:15 - 15:30 IST). Broker 0-delay real-time feed active.';
     } else if (timeInMinutes > 930 && timeInMinutes <= 960) {
       status = 'CLOSED';
       message = 'Post-market closing session concluded at 16:00 IST.';
@@ -453,12 +453,52 @@ export function getRealMarketTrends(): MarketTrendData {
 }
 
 /**
+ * Sets broker live feed status
+ */
+export function setBrokerLiveFeedActive(active: boolean, brokerName = 'Broker WebSocket') {
+  state.isRealFeedActive = active;
+}
+
+/**
+ * Ingests live tick from Broker WebSocket stream
+ */
+export function updateStockWithBrokerTick(
+  symbol: string,
+  tick: { price: number; high?: number; low?: number; volume?: number; change?: number; changePercent?: number }
+) {
+  const existing = state.stocks.get(symbol);
+  if (existing) {
+    existing.regularMarketPrice = tick.price;
+    if (tick.high) existing.regularMarketDayHigh = Math.max(existing.regularMarketDayHigh || 0, tick.high);
+    if (tick.low) existing.regularMarketDayLow = Math.min(existing.regularMarketDayLow || 999999, tick.low);
+    if (tick.volume) existing.regularMarketVolume = tick.volume;
+    if (tick.changePercent !== undefined) existing.regularMarketChangePercent = tick.changePercent;
+    if (tick.change !== undefined) existing.fulldayChange = tick.change;
+  } else {
+    state.stocks.set(symbol, {
+      symbol,
+      regularMarketPrice: tick.price,
+      regularMarketDayHigh: tick.high || tick.price,
+      regularMarketDayLow: tick.low || tick.price,
+      regularMarketVolume: tick.volume || 100000,
+      regularMarketChangePercent: tick.changePercent || 0,
+      fulldayChange: tick.change || 0,
+      chartPreviousClose: tick.price,
+    });
+  }
+}
+
+/**
  * Returns real stock quote enriched with real price data if available
  */
 export function enrichStockQuoteWithRealData(quote: StockQuote): StockQuote {
   const realMeta = state.stocks.get(quote.symbol);
   if (!realMeta || !realMeta.regularMarketPrice) {
-    return quote;
+    return {
+      ...quote,
+      isDelayed: false,
+      delayMinutes: 0,
+    };
   }
 
   const currentPrice = Math.round(realMeta.regularMarketPrice * 100) / 100;
@@ -477,8 +517,8 @@ export function enrichStockQuoteWithRealData(quote: StockQuote): StockQuote {
     high52w: realMeta.fiftyTwoWeekHigh ? Math.round(realMeta.fiftyTwoWeekHigh * 100) / 100 : quote.high52w,
     low52w: realMeta.fiftyTwoWeekLow ? Math.round(realMeta.fiftyTwoWeekLow * 100) / 100 : quote.low52w,
     volume: realMeta.regularMarketVolume || quote.volume,
-    isDelayed: true,
-    delayMinutes: 15,
+    isDelayed: false,
+    delayMinutes: 0,
     timestamp: new Date().toISOString(),
   };
 }

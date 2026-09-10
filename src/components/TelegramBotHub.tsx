@@ -191,7 +191,7 @@ export const TelegramBotHub: React.FC<TelegramBotHubProps> = ({
               <div className="flex flex-wrap items-center gap-4 mt-3 text-xs text-slate-400">
                 <div className="flex items-center gap-1.5">
                   <UserCheck className="w-3.5 h-3.5 text-sky-400" />
-                  <span>Linked User: <strong className="text-white">Ganesh Katla</strong> (<code className="text-sky-300 font-mono">{chatId}</code>)</span>
+                  <span>Linked User: <strong className="text-white">Ganesh Katla</strong> (<span className="text-indigo-300 font-mono">ganeshreddykatla321@gmail.com</span> • <code className="text-sky-300 font-mono">{chatId}</code>)</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />

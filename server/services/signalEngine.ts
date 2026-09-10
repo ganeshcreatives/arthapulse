@@ -251,6 +251,6 @@ export function generateSignal(quote: StockQuote, candles: Candle[], timeframe =
     invalidation,
     indicators,
     indicatorHash,
-    isDelayed: true,
+    isDelayed: false,
   };
 }

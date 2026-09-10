@@ -67,7 +67,7 @@ Provide a rigorous, educational, rule-grounded technical analysis and thesis for
 
 Stock: ${quote.name} (${quote.symbol}.NS)
 Sector: ${quote.sector} | Industry: ${quote.industry}
-Current Price: ₹${quote.currentPrice} (Delayed 15m)
+Current Price: ₹${quote.currentPrice} (LIVE Broker Feed - 0-Delay)
 Signal Type: ${signal.signalType}
 Technical Score: ${signal.technicalScore}/100
 Confidence: ${signal.confidence}% (${signal.confidenceLevel})

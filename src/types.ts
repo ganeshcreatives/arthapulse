@@ -572,3 +572,105 @@ export interface QuantAssetOverview {
   activeSetup: QuantTradeSetup;
 }
 
+// ==========================================
+// REAL-TIME BROKER WEBSOCKET TYPES
+// ==========================================
+export type SupportedBroker = 'zerodha' | 'angelone' | 'dhan' | 'upstox' | 'direct_stream';
+
+export interface BrokerConnectionStatus {
+  isConnected: boolean;
+  brokerType: SupportedBroker;
+  brokerName: string;
+  isZeroDelay: boolean;
+  latencyMs: number;
+  packetsProcessed: number;
+  ticksPerSecond: number;
+  lastTickTime: string;
+  subscribedSymbolsCount: number;
+  activeCredentialsConfigured: boolean;
+  authError?: string | null;
+  mode: 'BROKER_LIVE_WEBSOCKET' | 'DIRECT_ZERO_DELAY_STREAM';
+}
+
+export interface BrokerDeveloperAccount {
+  brokerId: 'zerodha' | 'angelone' | 'dhan' | 'upstox';
+  brokerName: string;
+  portalUrl: string;
+  registeredEmail: string;
+  appName: string;
+  clientId: string;
+  apiKey: string;
+  apiSecretMasked: string;
+  accessToken: string;
+  feedToken?: string;
+  ssoSessionId: string;
+  ssoStatus: 'CONNECTED' | 'ACTIVE_REFRESHED' | 'AUTHENTICATED';
+  authType: 'TOTP_AUTOMATED_SSO' | 'OAUTH2_PKCE' | 'DIRECT_TOKEN_BRIDGE';
+  permissions: string[];
+  lastSessionRefresh: string;
+  sessionExpiresAt: string;
+  isZeroDelayApproved: boolean;
+}
+
+export interface UnifiedMarketTick {
+  id: string;
+  symbol: string;
+  broker: 'zerodha' | 'angelone' | 'dhan' | 'upstox';
+  brokerName: string;
+  price: number;
+  change: number;
+  changePercent: number;
+  high: number;
+  low: number;
+  volume: number;
+  brokerTimestamp: number;
+  receivedTimestamp: number;
+  latencyMs: number;
+  isFastestInRace: boolean;
+  depth?: {
+    bid: number;
+    ask: number;
+    bidQty: number;
+    askQty: number;
+  };
+}
+
+export interface BrokerLatencyStats {
+  broker: 'zerodha' | 'angelone' | 'dhan' | 'upstox';
+  brokerName: string;
+  isConnected: boolean;
+  currentLatencyMs: number;
+  avgLatencyMs: number;
+  minLatencyMs: number;
+  maxLatencyMs: number;
+  totalTicksIngested: number;
+  ticksPerSecond: number;
+  winCount: number;
+  winRatePercent: number;
+  status: 'ULTRA_LOW_LATENCY' | 'OPTIMAL' | 'ACCEPTABLE' | 'DEGRADED';
+  protocol: string;
+  lastTickTime: string;
+}
+
+export interface MultiBrokerPipelineStatus {
+  activeBrokersCount: number;
+  totalBrokers: number;
+  isZeroCacheEnforced: boolean;
+  isZeroDelayCertified: boolean;
+  totalPipelineTicks: number;
+  pipelineThroughputPerSec: number;
+  overallFastestBroker: 'zerodha' | 'angelone' | 'dhan' | 'upstox';
+  fastestBrokerAvgLatency: number;
+  brokers: Record<'zerodha' | 'angelone' | 'dhan' | 'upstox', BrokerLatencyStats>;
+  recentArbitrations: Array<{
+    symbol: string;
+    winner: 'zerodha' | 'angelone' | 'dhan' | 'upstox';
+    winnerLatencyMs: number;
+    runnerUp: 'zerodha' | 'angelone' | 'dhan' | 'upstox';
+    runnerUpLatencyMs: number;
+    latencyAdvantageMs: number;
+    timestamp: string;
+  }>;
+}
+
+

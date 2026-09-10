@@ -85,13 +85,37 @@ function initQuotes() {
       pbRatio: stock.pbRatio,
       high52w: stock.high52w || Math.round(currentPrice * 1.25),
       low52w: stock.low52w || Math.round(currentPrice * 0.78),
-      isDelayed: true,
-      delayMinutes: 15,
+      isDelayed: false,
+      delayMinutes: 0,
       timestamp: timeStr,
     };
 
     liveQuotesMap.set(stock.symbol, quote);
   });
+}
+
+/**
+ * Ingests live tick from broker websocket into quotes map
+ */
+export function updateQuoteWithBrokerTick(
+  symbol: string,
+  ltp: number,
+  high?: number,
+  low?: number,
+  volume?: number
+) {
+  const q = liveQuotesMap.get(symbol);
+  if (q && ltp > 0) {
+    q.currentPrice = ltp;
+    q.isDelayed = false;
+    q.delayMinutes = 0;
+    if (high) q.high = Math.max(q.high, high);
+    if (low) q.low = Math.min(q.low, low);
+    if (volume) q.volume = volume;
+    q.change = Math.round((q.currentPrice - q.prevClose) * 100) / 100;
+    q.changePercent = Math.round((q.change / (q.prevClose || 1)) * 10000) / 100;
+    q.timestamp = new Date().toISOString();
+  }
 }
 
 initQuotes();
@@ -207,6 +231,6 @@ export function getMarketOverview(): MarketOverviewData {
     sectors: SECTORS_LIST,
     marketStatus: 'OPEN',
     timestamp: new Date().toISOString(),
-    isDelayed: true,
+    isDelayed: false,
   };
 }

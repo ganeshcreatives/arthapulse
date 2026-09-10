@@ -112,7 +112,11 @@ export const QuantTradingEngine: React.FC<QuantTradingEngineProps> = ({
       const res = await fetch('/api/quant/alert/telegram', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ setup }),
+        body: JSON.stringify({
+          setup,
+          customChatId: localStorage.getItem('mp_tg_chat_id') || '7756782040',
+          customBotToken: localStorage.getItem('mp_tg_token') || '8925063141:AAEros-jd0ukLRJr0wKE8e419ogKMEISE1k',
+        }),
       });
       const data = await res.json();
       if (res.ok && data.success) {
