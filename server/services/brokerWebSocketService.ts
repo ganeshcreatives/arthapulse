@@ -44,21 +44,28 @@ class BrokerWebSocketManager {
   private directStreamInterval: NodeJS.Timeout | null = null;
   private statsInterval: NodeJS.Timeout | null = null;
 
+  private reconnectAttempts = 0;
+  private rateLimitedUntil = 0;
+
   constructor() {
     this.loadEnvCredentials();
   }
 
   private loadEnvCredentials() {
-    const type = (process.env.BROKER_TYPE?.toLowerCase() as SupportedBroker) || 'dhan';
-    this.brokerType = ['zerodha', 'angelone', 'dhan', 'upstox'].includes(type) ? type : 'dhan';
-    const autoAcc = BrokerAutoProvisionerService.getAccount(this.brokerType);
+    const rawType = process.env.BROKER_TYPE?.toLowerCase() as SupportedBroker | undefined;
+    const type = rawType && ['zerodha', 'angelone', 'dhan', 'upstox', 'direct_stream'].includes(rawType)
+      ? rawType
+      : 'direct_stream';
 
+    this.brokerType = type;
+
+    // Only load real user-specified credentials from env variables
     this.credentials = {
       brokerType: this.brokerType,
-      apiKey: process.env.BROKER_API_KEY || autoAcc?.apiKey || '',
-      accessToken: process.env.BROKER_ACCESS_TOKEN || autoAcc?.accessToken || '',
-      clientId: process.env.BROKER_CLIENT_ID || autoAcc?.clientId || '',
-      feedToken: process.env.BROKER_FEED_TOKEN || autoAcc?.feedToken || '',
+      apiKey: process.env.BROKER_API_KEY?.trim() || '',
+      accessToken: process.env.BROKER_ACCESS_TOKEN?.trim() || '',
+      clientId: process.env.BROKER_CLIENT_ID?.trim() || '',
+      feedToken: process.env.BROKER_FEED_TOKEN?.trim() || '',
     };
   }
 
@@ -86,7 +93,7 @@ class BrokerWebSocketManager {
       console.log(`[BrokerWS] Initializing live connection to ${this.getBrokerName()}...`);
       this.connectBrokerWebSocket();
     } else {
-      console.log(`[BrokerWS] No broker credentials configured in .env. Starting Direct Zero-Delay Live Tick Stream...`);
+      console.log(`[BrokerWS] Running on Direct Zero-Delay Live Tick Stream (0 external rate limits)...`);
       this.startDirectStream();
     }
 
@@ -101,17 +108,25 @@ class BrokerWebSocketManager {
   }
 
   private hasValidCredentials(): boolean {
+    if (this.brokerType === 'direct_stream') {
+      return false;
+    }
+
+    // Must be non-empty, non-masked string
+    const isRealToken = (val?: string) =>
+      Boolean(val && typeof val === 'string' && val.trim().length > 6 && !val.includes('••••'));
+
     if (this.brokerType === 'zerodha') {
-      return Boolean(this.credentials.apiKey && this.credentials.accessToken);
+      return Boolean(isRealToken(this.credentials.apiKey) && isRealToken(this.credentials.accessToken));
     }
     if (this.brokerType === 'angelone') {
-      return Boolean(this.credentials.clientId && this.credentials.feedToken);
+      return Boolean(isRealToken(this.credentials.clientId) && isRealToken(this.credentials.feedToken));
     }
     if (this.brokerType === 'dhan') {
-      return Boolean(this.credentials.accessToken && this.credentials.clientId);
+      return Boolean(isRealToken(this.credentials.accessToken) && isRealToken(this.credentials.clientId));
     }
     if (this.brokerType === 'upstox') {
-      return Boolean(this.credentials.accessToken);
+      return Boolean(isRealToken(this.credentials.accessToken));
     }
     return false;
   }
@@ -120,6 +135,14 @@ class BrokerWebSocketManager {
    * Establishes real WebSocket connection to broker server
    */
   private connectBrokerWebSocket() {
+    // If currently rate limited, keep direct stream active and avoid spamming external broker
+    if (this.rateLimitedUntil && Date.now() < this.rateLimitedUntil) {
+      const waitMins = Math.ceil((this.rateLimitedUntil - Date.now()) / 60000);
+      console.log(`[BrokerWS] Rate limit cooldown active (${waitMins}m remaining). Maintaining direct stream.`);
+      this.startDirectStream();
+      return;
+    }
+
     this.stopDirectStream();
     if (this.ws) {
       try {
@@ -147,6 +170,9 @@ class BrokerWebSocketManager {
     } else if (this.brokerType === 'upstox') {
       wsUrl = 'wss://api.upstox.com/v2/feed/market-data-feed';
       headers['Authorization'] = `Bearer ${this.credentials.accessToken || ''}`;
+    } else {
+      this.startDirectStream();
+      return;
     }
 
     try {
@@ -156,6 +182,8 @@ class BrokerWebSocketManager {
         console.log(`[BrokerWS] Connected successfully to ${this.getBrokerName()}`);
         this.isConnected = true;
         this.authError = null;
+        this.reconnectAttempts = 0;
+        this.rateLimitedUntil = 0;
         setBrokerLiveFeedActive(true, this.getBrokerName());
 
         // Send subscribe message based on broker protocol
@@ -170,19 +198,34 @@ class BrokerWebSocketManager {
       });
 
       this.ws.on('error', (err: Error) => {
-        console.error(`[BrokerWS] WebSocket error: ${err.message}`);
-        this.authError = err.message;
+        const isRateLimit = err.message.includes('429');
+        if (isRateLimit) {
+          console.warn(`[BrokerWS] Broker responded with 429 Rate Limit. Automatically maintaining Direct Zero-Delay stream.`);
+          this.authError = 'Broker rate limit (HTTP 429). Seamless Zero-Delay direct stream active.';
+          this.rateLimitedUntil = Date.now() + 5 * 60 * 1000; // 5-minute cooldown before retrying external endpoint
+        } else {
+          console.warn(`[BrokerWS] Broker connection notice: ${err.message}. Direct Zero-Delay stream active.`);
+          this.authError = err.message;
+        }
+        this.startDirectStream();
       });
 
       this.ws.on('close', (code: number, reason: Buffer) => {
-        console.warn(`[BrokerWS] Disconnected from ${this.getBrokerName()} (code: ${code}, reason: ${reason.toString()})`);
+        const reasonStr = reason ? reason.toString() : '';
+        console.log(`[BrokerWS] Disconnected from ${this.getBrokerName()} (code: ${code}${reasonStr ? `, reason: ${reasonStr}` : ''})`);
         this.isConnected = false;
-        // Fallback to direct stream while retrying broker socket
+        // Seamless fallback to direct stream while retrying broker socket
         this.startDirectStream();
+
+        // If rate limited, do not schedule aggressive immediate reconnects
+        if (this.rateLimitedUntil && Date.now() < this.rateLimitedUntil) {
+          return;
+        }
+
         this.scheduleReconnect();
       });
     } catch (err: any) {
-      console.error(`[BrokerWS] Connection failure:`, err.message);
+      console.warn(`[BrokerWS] External connection failure:`, err.message);
       this.authError = err.message;
       this.startDirectStream();
     }
@@ -337,27 +380,41 @@ class BrokerWebSocketManager {
 
   private scheduleReconnect() {
     if (this.reconnectTimer) return;
+    if (this.rateLimitedUntil && Date.now() < this.rateLimitedUntil) {
+      return;
+    }
+
+    this.reconnectAttempts++;
+    if (this.reconnectAttempts > 3) {
+      console.log(`[BrokerWS] Reconnection limit reached. Seamlessly continuing Direct Zero-Delay Stream.`);
+      return;
+    }
+
+    const delay = Math.min(30000, 10000 * Math.pow(1.5, this.reconnectAttempts - 1));
     this.reconnectTimer = setTimeout(() => {
       this.reconnectTimer = null;
       if (this.hasValidCredentials()) {
-        console.log(`[BrokerWS] Attempting reconnection to ${this.getBrokerName()}...`);
+        console.log(`[BrokerWS] Attempting reconnection to ${this.getBrokerName()} (attempt ${this.reconnectAttempts}/3)...`);
         this.connectBrokerWebSocket();
       }
-    }, 10000);
+    }, delay);
   }
 
   /**
    * Configures new credentials dynamically from UI or API
    */
   public updateConfig(creds: Partial<BrokerCredentials>): BrokerConnectionStatus {
+    this.reconnectAttempts = 0;
+    this.rateLimitedUntil = 0;
+
     if (creds.brokerType) {
       this.brokerType = creds.brokerType;
       this.credentials.brokerType = creds.brokerType;
     }
-    if (creds.apiKey !== undefined) this.credentials.apiKey = creds.apiKey;
-    if (creds.accessToken !== undefined) this.credentials.accessToken = creds.accessToken;
-    if (creds.clientId !== undefined) this.credentials.clientId = creds.clientId;
-    if (creds.feedToken !== undefined) this.credentials.feedToken = creds.feedToken;
+    if (creds.apiKey !== undefined) this.credentials.apiKey = creds.apiKey?.trim() || '';
+    if (creds.accessToken !== undefined) this.credentials.accessToken = creds.accessToken?.trim() || '';
+    if (creds.clientId !== undefined) this.credentials.clientId = creds.clientId?.trim() || '';
+    if (creds.feedToken !== undefined) this.credentials.feedToken = creds.feedToken?.trim() || '';
 
     this.authError = null;
 
