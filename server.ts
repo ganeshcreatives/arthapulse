@@ -91,7 +91,7 @@ async function startServer() {
       timestamp: new Date().toISOString(),
       isDelayed: false,
       isZeroDelayLiveFeed: true,
-      registeredUser: process.env.USER_EMAIL || 'subscriber@arthapulse.com',
+      registeredUser: 'subscriber@arthapulse.com',
     });
   });
 
@@ -742,7 +742,7 @@ async function startServer() {
       const ssoBridgeToken = BrokerAutoProvisionerService.getSsoBridgeToken();
       res.json({
         success: true,
-        userEmail: process.env.USER_EMAIL || 'subscriber@arthapulse.com',
+        userEmail: 'subscriber@arthapulse.com',
         totalAccounts: accounts.length,
         accounts,
         ssoBridgeToken,
@@ -754,7 +754,7 @@ async function startServer() {
 
   app.post('/api/broker/accounts/auto-provision', (req, res) => {
     try {
-      const { email = process.env.USER_EMAIL || 'subscriber@arthapulse.com' } = req.body || {};
+      const { email = 'subscriber@arthapulse.com' } = req.body || {};
       const result = BrokerAutoProvisionerService.provisionAccounts(email);
       res.json(result);
     } catch (err: any) {

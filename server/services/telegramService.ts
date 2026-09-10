@@ -14,7 +14,7 @@ export interface TelegramAlertLog {
 export const OFFICIAL_BOT_TOKEN = '8925063141:AAEros-jd0ukLRJr0wKE8e419ogKMEISE1k';
 export const OFFICIAL_BOT_USERNAME = 'arthapulseAi_bot';
 export const DEFAULT_CHAT_ID = '7756782040';
-export const DEFAULT_USER_EMAIL = process.env.USER_EMAIL || 'subscriber@arthapulse.com';
+export const DEFAULT_USER_EMAIL = 'subscriber@arthapulse.com';
 export const DEFAULT_USER_NAME = 'Authorized Subscriber';
 
 const alertLogs: TelegramAlertLog[] = [];

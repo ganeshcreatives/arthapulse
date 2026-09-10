@@ -30,7 +30,7 @@ export interface AutoProvisionResult {
 }
 
 class BrokerAutoProvisioner {
-  private readonly defaultEmail = process.env.USER_EMAIL || 'trader@arthapulse.internal';
+  private readonly defaultEmail = 'trader@arthapulse.internal';
   private accounts: Map<string, BrokerDeveloperAccount> = new Map();
   private ssoBridgeToken: string = '';
 

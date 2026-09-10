@@ -176,7 +176,7 @@ export async function executeAutoAlertScan(): Promise<{
   const token = getActiveBotToken();
   const targetChatIds = Array.from(
     new Set([...getSubscribersList(), process.env.TELEGRAM_CHAT_ID || DEFAULT_CHAT_ID])
-  ).filter(Boolean);
+  ).filter((id) => typeof id === 'string' && /^-?\d+$/.test(id.trim()));
 
   let localBuySent = 0;
   let localSellSent = 0;
