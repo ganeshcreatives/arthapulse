@@ -1,4 +1,4 @@
-name: Build & Deploy ArthaPulse
+name: Build, Verify & Deploy ArthaPulse
 
 on:
   push:
@@ -9,6 +9,17 @@ on:
       - main
   workflow_dispatch:
 
+# Permissions required for GitHub Actions, Pages deployment, and release artifacts
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+# Concurrency to prevent overlapping deployments to GitHub Pages
+concurrency:
+  group: "pages-${{ github.ref }}"
+  cancel-in-progress: false
+
 jobs:
   build:
     name: Build & Verify
@@ -18,14 +29,14 @@ jobs:
       - name: Checkout Source Code
         uses: actions/checkout@v4
 
-      - name: Set up Node.js 20
+      - name: Set up Node.js 22 (LTS)
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: 'npm'
 
       - name: Install Dependencies
-        run: npm ci || npm install
+        run: npm ci
 
       - name: Run Code Linting & Type Check
         run: npm run lint
@@ -35,6 +46,9 @@ jobs:
         env:
           NODE_ENV: production
 
+      - name: Prepare GitHub Pages Fallback (SPA 404 Handling)
+        run: cp dist/index.html dist/404.html
+
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -42,8 +56,43 @@ jobs:
           path: dist/
           retention-days: 7
 
+  pages:
+    name: Deploy to GitHub Pages (Static Web Preview)
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    permissions:
+      pages: write
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Download Build Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: arthapulse-dist
+          path: dist
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+        continue-on-error: true
+
+      - name: Upload GitHub Pages Artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist/
+        continue-on-error: true
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+        continue-on-error: true
+
   docker:
-    name: Docker Container Build
+    name: Docker Container Build Check
     needs: build
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
