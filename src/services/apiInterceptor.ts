@@ -35,9 +35,9 @@ export function setupApiInterceptor() {
   if (isInterceptorInstalled || typeof window === 'undefined') return;
   isInterceptorInstalled = true;
 
-  const originalFetch = window.fetch.bind(window);
+  const nativeFetch = (window.fetch || globalThis.fetch).bind(window);
 
-  window.fetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+  const customFetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
     const urlString = typeof input === 'string'
       ? input
       : input instanceof URL
@@ -47,12 +47,12 @@ export function setupApiInterceptor() {
     // Only intercept /api/ requests
     const isApiCall = urlString.startsWith('/api/') || urlString.includes('/api/');
     if (!isApiCall) {
-      return originalFetch(input, init);
+      return nativeFetch(input, init);
     }
 
     try {
       // First attempt to call the real backend
-      const response = await originalFetch(input, init);
+      const response = await nativeFetch(input, init);
       
       // On GitHub Pages or static hosts without an Express server, missing paths return 404 with HTML!
       const contentType = response.headers.get('content-type') || '';
@@ -66,6 +66,36 @@ export function setupApiInterceptor() {
     // Serve client fallback response
     return handleClientFallback(urlString, init);
   };
+
+  // Safely install customFetch without triggering "Cannot set property fetch of #<Window> which has only a getter"
+  try {
+    Object.defineProperty(window, 'fetch', {
+      value: customFetch,
+      writable: true,
+      configurable: true,
+      enumerable: true,
+    });
+  } catch (e1) {
+    try {
+      Object.defineProperty(Window.prototype, 'fetch', {
+        value: customFetch,
+        writable: true,
+        configurable: true,
+        enumerable: true,
+      });
+    } catch (e2) {
+      try {
+        Object.defineProperty(globalThis, 'fetch', {
+          value: customFetch,
+          writable: true,
+          configurable: true,
+          enumerable: true,
+        });
+      } catch (e3) {
+        console.warn('ArthaPulse API interceptor could not override window.fetch:', e3);
+      }
+    }
+  }
 }
 
 function jsonResponse(data: any, status = 200): Response {
