@@ -1,0 +1,7 @@
+{
+  "name": "ArthaPulse",
+  "description": "Feel the Market. See the Future. Professional Indian stock market intelligence and IPO tracker with continuous multi-factor AI predictions, verified subscription metrics, live GMP, and Telegram bot alerts.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+

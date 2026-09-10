@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128">
+  <defs>
+    <linearGradient id="favBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#050B18" />
+      <stop offset="100%" stop-color="#071329" />
+    </linearGradient>
+    <linearGradient id="favBar" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#0284C7" />
+      <stop offset="100%" stop-color="#00E5FF" />
+    </linearGradient>
+    <filter id="favGlow">
+      <feGaussianBlur stdDeviation="2.5" result="b" />
+      <feMerge>
+        <feMergeNode in="b" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  </defs>
+
+  <rect width="128" height="128" rx="28" fill="url(#favBg)" />
+  <rect width="126" height="126" x="1" y="1" rx="27" fill="none" stroke="#00D2FF" stroke-width="1.5" stroke-opacity="0.35" />
+
+  <!-- Pulse waveform -->
+  <path d="M 12 76 L 24 76 L 28 66 L 33 88 L 39 42 L 45 92 L 50 68 L 56 76 L 62 76"
+        fill="none"
+        stroke="#00E5FF"
+        stroke-width="3"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        filter="url(#favGlow)" />
+
+  <!-- Rising Bars -->
+  <g filter="url(#favGlow)">
+    <rect x="62" y="74" width="5.5" height="14" rx="1.5" fill="url(#favBar)" />
+    <rect x="71" y="66" width="5.5" height="22" rx="1.5" fill="url(#favBar)" />
+    <rect x="80" y="56" width="5.5" height="32" rx="1.5" fill="url(#favBar)" />
+    <rect x="89" y="44" width="6" height="44" rx="2" fill="url(#favBar)" />
+    <rect x="99" y="30" width="6.5" height="58" rx="2" fill="url(#favBar)" />
+  </g>
+
+  <!-- Curving Arrow -->
+  <g filter="url(#favGlow)">
+    <path d="M 58 74 Q 75 62 92 42 T 112 20"
+          fill="none"
+          stroke="#FFFFFF"
+          stroke-width="3"
+          stroke-linecap="round" />
+    <polygon points="116,16 102,23 109,30" fill="#00E5FF" />
+  </g>
+</svg>
