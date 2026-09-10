@@ -91,7 +91,7 @@ async function startServer() {
       timestamp: new Date().toISOString(),
       isDelayed: false,
       isZeroDelayLiveFeed: true,
-      registeredUser: 'ganeshreddykatla321@gmail.com',
+      registeredUser: process.env.USER_EMAIL || 'subscriber@arthapulse.com',
     });
   });
 
@@ -735,14 +735,14 @@ async function startServer() {
     }
   });
 
-  // Automated Broker Developer Accounts & SSO Bridge for ganeshreddykatla321@gmail.com
+  // Automated Broker Developer Accounts & SSO Bridge
   app.get('/api/broker/accounts', (req, res) => {
     try {
       const accounts = BrokerAutoProvisionerService.getAccounts();
       const ssoBridgeToken = BrokerAutoProvisionerService.getSsoBridgeToken();
       res.json({
         success: true,
-        userEmail: 'ganeshreddykatla321@gmail.com',
+        userEmail: process.env.USER_EMAIL || 'subscriber@arthapulse.com',
         totalAccounts: accounts.length,
         accounts,
         ssoBridgeToken,
@@ -754,7 +754,7 @@ async function startServer() {
 
   app.post('/api/broker/accounts/auto-provision', (req, res) => {
     try {
-      const { email = 'ganeshreddykatla321@gmail.com' } = req.body || {};
+      const { email = process.env.USER_EMAIL || 'subscriber@arthapulse.com' } = req.body || {};
       const result = BrokerAutoProvisionerService.provisionAccounts(email);
       res.json(result);
     } catch (err: any) {

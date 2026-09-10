@@ -338,7 +338,7 @@ export const TelegramAlertModal: React.FC<TelegramAlertModalProps> = ({
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                   <span className="text-slate-300">Target Bot: <strong className="text-sky-400 font-mono">@arthapulseAi_bot</strong></span>
                   <span className="text-slate-500">•</span>
-                  <span className="text-slate-400">Recipient: <strong className="text-emerald-400 font-mono">{chatId}</strong> (Ganesh Katla • <span className="text-sky-300 font-mono">ganeshreddykatla321@gmail.com</span>)</span>
+                  <span className="text-slate-400">Recipient: <strong className="text-emerald-400 font-mono">{chatId}</strong></span>
                 </div>
                 <a
                   href="https://t.me/arthapulseAi_bot"
@@ -445,7 +445,7 @@ export const TelegramAlertModal: React.FC<TelegramAlertModalProps> = ({
                     className="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-white font-mono placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                   />
                   <p className="text-[11px] text-slate-400 mt-1">
-                    Connected User: <strong className="text-emerald-400">Ganesh Katla</strong> (<code className="text-sky-400 font-mono">7756782040</code>). To link a different chat, tap <a href="https://t.me/arthapulseAi_bot" target="_blank" rel="noreferrer" className="text-indigo-400 underline">t.me/arthapulseAi_bot</a>, send <code className="text-slate-200 font-mono">/start</code>, and click <strong>Auto-Detect</strong>.
+                    Direct Subscriber ID: <code className="text-sky-400 font-mono">{chatId || '7756782040'}</code>. To link a new chat, tap <a href="https://t.me/arthapulseAi_bot" target="_blank" rel="noreferrer" className="text-indigo-400 underline">t.me/arthapulseAi_bot</a>, send <code className="text-slate-200 font-mono">/start</code>, and click <strong>Auto-Detect</strong>.
                   </p>
                 </div>
 

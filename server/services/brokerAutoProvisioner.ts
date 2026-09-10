@@ -30,7 +30,7 @@ export interface AutoProvisionResult {
 }
 
 class BrokerAutoProvisioner {
-  private readonly defaultEmail = 'ganeshreddykatla321@gmail.com';
+  private readonly defaultEmail = process.env.USER_EMAIL || 'trader@arthapulse.internal';
   private accounts: Map<string, BrokerDeveloperAccount> = new Map();
   private ssoBridgeToken: string = '';
 
@@ -59,7 +59,7 @@ class BrokerAutoProvisioner {
 
   /**
    * Fully automated provisioning and registration of developer accounts across all brokers
-   * bypassing manual portal setup for ganeshreddykatla321@gmail.com
+   * bypassing manual portal setup for authorized user
    */
   public provisionAccounts(email: string = this.defaultEmail): AutoProvisionResult {
     const now = new Date();

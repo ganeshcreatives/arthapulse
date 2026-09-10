@@ -112,7 +112,7 @@ export const BrokerConnectionModal: React.FC<BrokerConnectionModalProps> = ({
       const res = await fetch('/api/broker/accounts/auto-provision', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: 'ganeshreddykatla321@gmail.com' }),
+        body: JSON.stringify({}),
       });
       const data = await res.json();
       if (res.ok && data.success) {
@@ -209,7 +209,7 @@ export const BrokerConnectionModal: React.FC<BrokerConnectionModalProps> = ({
                 </span>
               </div>
               <p className="text-xs text-slate-400 mt-0.5">
-                Developer profile: <strong className="text-white font-mono">ganeshreddykatla321@gmail.com</strong> • Automated portal bypass active
+                Automated multi-broker pipeline • Direct execution bypass active
               </p>
             </div>
           </div>
@@ -519,8 +519,8 @@ export const BrokerConnectionModal: React.FC<BrokerConnectionModalProps> = ({
                 <div>
                   <div className="flex items-center gap-2 text-xs text-slate-400">
                     <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                    <span>Registered Developer Email:</span>
-                    <strong className="text-white font-mono">ganeshreddykatla321@gmail.com</strong>
+                    <span>Trading Profile:</span>
+                    <strong className="text-emerald-400 font-mono">Institutional Trader (Active)</strong>
                   </div>
                   <div className="text-[11px] text-slate-500 mt-1">
                     Portal Configuration: <span className="text-emerald-400 font-bold">100% Automated &amp; Bypassed</span> • Server-Side TOTP Bridge active
@@ -629,8 +629,8 @@ export const BrokerConnectionModal: React.FC<BrokerConnectionModalProps> = ({
             <div className="space-y-4">
               <div className="p-3.5 rounded-xl bg-slate-950/80 border border-slate-800 text-xs text-slate-400">
                 <p>
-                  By default, our automated engine handles key generation and SSO bridging for{' '}
-                  <strong className="text-white">ganeshreddykatla321@gmail.com</strong>. If you wish to inject
+                  By default, our automated engine handles key generation and SSO bridging for your
+                  authorized trading account. If you wish to inject
                   custom API credentials for a specific broker, you can override them below:
                 </p>
               </div>

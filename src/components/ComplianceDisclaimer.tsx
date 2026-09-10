@@ -38,7 +38,7 @@ export const ComplianceDisclaimer: React.FC = () => {
         <div className="flex items-center gap-2">
           <ShieldAlert className="w-4 h-4 text-emerald-400 shrink-0" />
           <span className="text-slate-300">
-            <strong className="font-semibold text-emerald-300">Live Architecture Notice:</strong> Strict zero-cache live stream active (<code className="text-emerald-400 font-mono">no-store</code>). 0-delay multi-broker tick pipeline for <strong className="text-white font-mono">ganeshreddykatla321@gmail.com</strong>.
+            <strong className="font-semibold text-emerald-300">Live Architecture Notice:</strong> Strict zero-cache live stream active (<code className="text-emerald-400 font-mono">no-store</code>). 0-delay multi-broker tick pipeline active.
           </span>
         </div>
         <div className="flex items-center gap-2">

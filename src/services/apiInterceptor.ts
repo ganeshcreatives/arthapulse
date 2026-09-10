@@ -121,7 +121,7 @@ async function handleClientFallback(urlString: string, init?: RequestInit): Prom
       timestamp: new Date().toISOString(),
       isDelayed: false,
       isZeroDelayLiveFeed: true,
-      registeredUser: 'ganeshreddykatla321@gmail.com',
+      registeredUser: 'subscriber@arthapulse.internal',
     });
   }
 
@@ -411,7 +411,7 @@ async function handleClientFallback(urlString: string, init?: RequestInit): Prom
       status: 'ONLINE',
       mode: 'POLLING',
       chatSubscribers: 142,
-      registeredUser: 'ganeshreddykatla321@gmail.com',
+      registeredUser: 'subscriber@arthapulse.internal',
     });
   }
 

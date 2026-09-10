@@ -14,8 +14,8 @@ export interface TelegramAlertLog {
 export const OFFICIAL_BOT_TOKEN = '8925063141:AAEros-jd0ukLRJr0wKE8e419ogKMEISE1k';
 export const OFFICIAL_BOT_USERNAME = 'arthapulseAi_bot';
 export const DEFAULT_CHAT_ID = '7756782040';
-export const DEFAULT_USER_EMAIL = 'ganeshreddykatla321@gmail.com';
-export const DEFAULT_USER_NAME = 'Ganesh Katla';
+export const DEFAULT_USER_EMAIL = process.env.USER_EMAIL || 'subscriber@arthapulse.com';
+export const DEFAULT_USER_NAME = 'Authorized Subscriber';
 
 const alertLogs: TelegramAlertLog[] = [];
 const subscribers = new Set<string>([DEFAULT_CHAT_ID]);
@@ -47,7 +47,7 @@ const cachedChats: Map<string, DetectedChat> = new Map([
     {
       id: DEFAULT_CHAT_ID,
       name: DEFAULT_USER_NAME,
-      username: 'ganeshkatla',
+      username: 'subscriber',
       email: DEFAULT_USER_EMAIL,
       lastMessage: '/start',
       date: new Date().toISOString(),
