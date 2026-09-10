@@ -9,13 +9,12 @@ on:
       - main
   workflow_dispatch:
 
-# Permissions required for GitHub Actions, Pages deployment, and release artifacts
+# Permissions required for GitHub Actions, Pages deployment, gh-pages branch push, and release artifacts
 permissions:
   contents: write
   pages: write
   id-token: write
 
-# Concurrency to prevent overlapping deployments to GitHub Pages
 concurrency:
   group: "pages-${{ github.ref }}"
   cancel-in-progress: false
@@ -63,11 +62,11 @@ jobs:
     if: github.ref == 'refs/heads/main'
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      url: ${{ steps.deployment.outputs.page_url || 'https://ganeshcreatives.github.io/arthapulse/' }}
     permissions:
+      contents: write
       pages: write
       id-token: write
-      contents: read
 
     steps:
       - name: Download Build Artifacts
@@ -76,8 +75,18 @@ jobs:
           name: arthapulse-dist
           path: dist
 
+      - name: Deploy to gh-pages Branch
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          force_orphan: true
+        continue-on-error: true
+
       - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
+        with:
+          enablement: true
         continue-on-error: true
 
       - name: Upload GitHub Pages Artifact
@@ -90,6 +99,17 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v4
         continue-on-error: true
+
+      - name: Publish Deployment Links in Job Summary
+        if: always()
+        run: |
+          echo "### 🌐 ArthaPulse Deployment Links" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- 🔗 **GitHub Pages URL**: [https://ganeshcreatives.github.io/arthapulse/](https://ganeshcreatives.github.io/arthapulse/)" >> $GITHUB_STEP_SUMMARY
+          echo "- 🔗 **Development App URL**: [https://ais-dev-zrnhehxm2jd57apowgvxl3-233901165083.asia-east1.run.app](https://ais-dev-zrnhehxm2jd57apowgvxl3-233901165083.asia-east1.run.app)" >> $GITHUB_STEP_SUMMARY
+          echo "- 🔗 **Shared Preview URL**: [https://ais-pre-zrnhehxm2jd57apowgvxl3-233901165083.asia-east1.run.app](https://ais-pre-zrnhehxm2jd57apowgvxl3-233901165083.asia-east1.run.app)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "> ℹ️ **To Activate GitHub Pages**: Go to [Repository Settings → Pages](https://github.com/ganeshcreatives/arthapulse/settings/pages). Under **Build and deployment > Source**, select **GitHub Actions** (or branch \`gh-pages\`)." >> $GITHUB_STEP_SUMMARY
 
   docker:
     name: Docker Container Build Check

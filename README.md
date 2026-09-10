@@ -15,6 +15,9 @@
 
 You can open and use ArthaPulse right now from any computer, phone, or tablet anywhere in the world:
 
+- 🌐 **GitHub Pages Static Web App**:  
+  **[https://ganeshcreatives.github.io/arthapulse/](https://ganeshcreatives.github.io/arthapulse/)**
+
 - 🚀 **Live Production / Public Web App**:  
   **[https://ais-pre-zrnhehxm2jd57apowgvxl3-233901165083.asia-east1.run.app](https://ais-pre-zrnhehxm2jd57apowgvxl3-233901165083.asia-east1.run.app)**
 
