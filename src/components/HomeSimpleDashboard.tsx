@@ -173,6 +173,39 @@ export const HomeSimpleDashboard: React.FC<HomeSimpleDashboardProps> = ({
         </div>
       </div>
 
+      {/* Front-and-Center High-Frequency Quant Trading Engine Feature Callout */}
+      <div className="bg-gradient-to-r from-amber-950/40 via-indigo-950/40 to-slate-900 border border-amber-500/30 rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-xl relative overflow-hidden">
+        <div className="flex items-start gap-3.5">
+          <div className="w-10 h-10 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center flex-shrink-0 text-amber-400">
+            <Zap className="w-5 h-5 fill-amber-400/20" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                PRO QUANT SYSTEM
+              </span>
+              <span className="text-xs text-slate-400 font-mono">
+                F&amp;O • MCX Commodities • Intraday Cash
+              </span>
+            </div>
+            <h2 className="text-sm sm:text-base font-bold text-white">
+              Second-by-Second Tick Ingestion &amp; Live Orderbook Anti-Spoofing
+            </h2>
+            <p className="text-xs text-slate-300 mt-0.5">
+              Level-2 5-depth orderbook, Bollinger Bands mean-reversion, VWAP deviation bands, 10-day tick backtests, and instant Telegram webhook executions.
+            </p>
+          </div>
+        </div>
+
+        <button
+          onClick={() => handleNav('quant')}
+          className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-xs flex items-center gap-1.5 transition-all shadow-md shadow-amber-950/50 cursor-pointer flex-shrink-0"
+        >
+          <span>Open Quant Engine</span>
+          <ArrowUpRight className="w-4 h-4" />
+        </button>
+      </div>
+
       {/* =========================================================================
           SECTION 1: COMPACT MARKET TRENDS (STRICTLY SINGLE-LINE ITEMS)
           ========================================================================= */}

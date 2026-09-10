@@ -16,13 +16,15 @@ import {
   Globe2,
   BarChart3,
   Home,
-  HelpCircle
+  HelpCircle,
+  Zap
 } from 'lucide-react';
 import { MarketIndex, StockQuote } from '../types.js';
 import { ArthaPulseLogo } from './ArthaPulseLogo.js';
 
 export type NavTabType =
   | 'home'
+  | 'quant'
   | 'predictions'
   | 'ipos'
   | 'top10'
@@ -234,6 +236,19 @@ export const Navbar: React.FC<NavbarProps> = ({
             >
               <Home className="w-3.5 h-3.5" />
               <span>Today's Market</span>
+            </button>
+
+            <button
+              id="tab-btn-quant"
+              onClick={() => setActiveTab('quant')}
+              className={`px-3 py-1.5 rounded-lg text-xs sm:text-sm font-bold transition-all flex items-center gap-1.5 flex-shrink-0 cursor-pointer ${
+                activeTab === 'quant'
+                  ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-950/50 ring-1 ring-amber-400'
+                  : 'bg-amber-950/30 text-amber-300 border border-amber-500/40 hover:bg-amber-900/40'
+              }`}
+            >
+              <Zap className="w-3.5 h-3.5 text-amber-400 fill-amber-400/20" />
+              <span>Quant Engine (F&amp;O / MCX)</span>
             </button>
 
             <button

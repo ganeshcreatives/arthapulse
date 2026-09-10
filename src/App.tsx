@@ -14,6 +14,7 @@ import { MutualFundsExplorer } from './components/MutualFundsExplorer.js';
 import { IpoTracker } from './components/IpoTracker.js';
 import { MacroGeopoliticsMonitor } from './components/MacroGeopoliticsMonitor.js';
 import { BacktestDashboard } from './components/BacktestDashboard.js';
+import { QuantTradingEngine } from './components/QuantTradingEngine.js';
 import { TelegramAlertModal } from './components/TelegramAlertModal.js';
 import { TelegramBotHub } from './components/TelegramBotHub.js';
 import { ArthaPulseLogo } from './components/ArthaPulseLogo.js';
@@ -156,6 +157,10 @@ export default function App() {
                 onNavigate={(tab) => setActiveTab(tab as NavTabType)}
                 onOpenGlossary={() => setIsGlossaryOpen(true)}
               />
+            )}
+
+            {activeTab === 'quant' && (
+              <QuantTradingEngine />
             )}
 
             {activeTab === 'predictions' && (

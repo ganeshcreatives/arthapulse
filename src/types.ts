@@ -467,3 +467,108 @@ export interface BacktestResult {
   strategyRules: string[];
 }
 
+// ==========================================
+// QUANTITATIVE HIGH-FREQUENCY ENGINE TYPES
+// Multi-Asset: F&O, Commodities, Intraday
+// ==========================================
+export type QuantAssetCategory = 'F_AND_O' | 'COMMODITIES' | 'INTRADAY_EQUITY';
+
+export interface QuantOrderBookLevel {
+  price: number;
+  qty: number;
+  orders: number;
+  isSpoofed?: boolean;
+}
+
+export interface QuantLevel2OrderBook {
+  symbol: string;
+  timestamp: string;
+  bids: QuantOrderBookLevel[];
+  asks: QuantOrderBookLevel[];
+  totalBidQty: number;
+  totalAskQty: number;
+  bidAskRatio: number;
+  spoofDetected: boolean;
+  spoofConfidence: number;
+  institutionalDelta: number;
+}
+
+export interface QuantIndicatorMetrics {
+  currentPrice: number;
+  vwap: number;
+  bbUpper: number;
+  bbMiddle: number;
+  bbLower: number;
+  bbPercentB: number;
+  meanReversionStatus: 'OVERSOLD_BOUNCE' | 'OVERBOUGHT_REJECTION' | 'NEUTRAL_RANGE';
+  momentumScore: number;
+  pocPrice: number;
+  vahPrice: number;
+  valPrice: number;
+}
+
+export interface QuantAiMacroFilterOverlay {
+  macroSentiment: 'BULLISH' | 'BEARISH' | 'VOLATILE_CAUTION';
+  macroScore: number;
+  diiFiiFlow: {
+    fiiNetCrores: number;
+    diiNetCrores: number;
+    trend: 'ACCUMULATION' | 'DISTRIBUTION' | 'BALANCED';
+  };
+  geopoliticalRisk: 'LOW' | 'MODERATE' | 'HIGH';
+  tariffTradeImpact: string;
+  spoofFilteringAction: 'CLEARED' | 'FILTERED_FAKE_WALL' | 'HIGH_SPOOF_RISK';
+  compositeTradeConfidence: number;
+}
+
+export interface QuantTradeSetup {
+  symbol: string;
+  assetClass: QuantAssetCategory;
+  assetName: string;
+  action: 'BUY' | 'SELL';
+  contractType?: 'FUT' | 'CALL_CE' | 'PUT_PE' | 'SPOT';
+  strike?: number;
+  expiry?: string;
+  entryPrice: number;
+  stopLoss: number;
+  targetPrice: number;
+  riskRewardRatio: string;
+  projectedPnlPercent: number;
+  confidenceScore: number;
+  timeframe: string;
+  triggerReason: string;
+}
+
+export interface QuantHistorical10DayBacktestResult {
+  symbol: string;
+  testPeriodDays: number;
+  totalTicksAnalyzed: number;
+  totalTrades: number;
+  winRate: number;
+  profitFactor: number;
+  sharpeRatio: number;
+  maxDrawdown: number;
+  netReturnPercent: number;
+  averageTradeGainPercent: number;
+  dailyReturns: { day: string; pnlPercent: number; tradesCount: number }[];
+}
+
+export interface QuantAssetOverview {
+  symbol: string;
+  name: string;
+  category: QuantAssetCategory;
+  contractDetails?: string;
+  currentPrice: number;
+  change: number;
+  changePercent: number;
+  high24h: number;
+  low24h: number;
+  volume: string;
+  openInterest?: string;
+  pcrRatio?: number;
+  orderBook: QuantLevel2OrderBook;
+  indicators: QuantIndicatorMetrics;
+  macroFilter: QuantAiMacroFilterOverlay;
+  activeSetup: QuantTradeSetup;
+}
+

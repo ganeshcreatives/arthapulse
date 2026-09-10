@@ -35,11 +35,12 @@ import { getAllIpos, refreshIpoData } from './server/services/ipoService.js';
 import { generateTop10Recommendations } from './server/services/quantitativeScoringEngine.js';
 import { runHistoricalBacktest } from './server/services/backtestingService.js';
 import { generateBeginnerStockPredictions } from './server/services/beginnerPredictionService.js';
+import { QuantHftEngineService } from './server/services/quantHftEngine.js';
 
 dotenv.config();
 
-const __filename = typeof import.meta !== 'undefined' && import.meta.url ? fileURLToPath(import.meta.url) : (typeof __filename !== 'undefined' ? __filename : '');
-const __dirname = __filename ? path.dirname(__filename) : process.cwd();
+const currentFilePath = typeof import.meta !== 'undefined' && import.meta.url ? fileURLToPath(import.meta.url) : '';
+const currentDirPath = currentFilePath ? path.dirname(currentFilePath) : process.cwd();
 
 async function startServer() {
   const app = express();
@@ -533,6 +534,119 @@ async function startServer() {
       res.json(getAlertLogs());
     } catch (err: any) {
       res.status(500).json({ error: err.message || 'Failed to fetch alert logs' });
+    }
+  });
+
+  // ==========================================
+  // QUANTITATIVE HIGH-FREQUENCY ENGINE APIS
+  // Covering Intraday, F&O, and Commodities (MCX)
+  // ==========================================
+  app.get('/api/quant/assets', (req, res) => {
+    try {
+      const assets = QuantHftEngineService.getAllAssets();
+      res.json({
+        success: true,
+        timestamp: new Date().toISOString(),
+        assets,
+      });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'Failed to fetch quant assets' });
+    }
+  });
+
+  app.get('/api/quant/asset/:symbol', (req, res) => {
+    try {
+      const { symbol } = req.params;
+      const asset = QuantHftEngineService.getAssetBySymbol(symbol);
+      if (!asset) {
+        return res.status(404).json({ error: `Quant asset ${symbol} not found` });
+      }
+      res.json({
+        success: true,
+        timestamp: new Date().toISOString(),
+        asset,
+      });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'Failed to fetch quant asset' });
+    }
+  });
+
+  app.get('/api/quant/backtest/:symbol', (req, res) => {
+    try {
+      const { symbol } = req.params;
+      const backtest = QuantHftEngineService.get10DayBacktest(symbol);
+      res.json({
+        success: true,
+        backtest,
+      });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'Failed to run 10-day quant backtest' });
+    }
+  });
+
+  app.post('/api/quant/alert/telegram', async (req, res) => {
+    try {
+      const { setup, customChatId, customBotToken } = req.body;
+      if (!setup || !setup.symbol) {
+        return res.status(400).json({ error: 'Valid quant trade setup is required' });
+      }
+
+      const botToken = customBotToken || process.env.TELEGRAM_BOT_TOKEN;
+      const chatId = customChatId || process.env.TELEGRAM_CHAT_ID;
+
+      if (!botToken || !chatId) {
+        return res.status(400).json({
+          error: 'Telegram credentials missing. Please configure bot token and chat ID.'
+        });
+      }
+
+      // Human-readable formatted quant alert message
+      const emoji = setup.action === 'BUY' ? '🚀' : '🔻';
+      const actionBadge = setup.action === 'BUY' ? '🟢 BUY / LONG' : '🔴 SELL / SHORT';
+      const text = `${emoji} <b>ARTHAPULSE QUANT SIGNAL: ${setup.symbol}</b>
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🏷️ <b>Asset Class:</b> ${setup.assetClass.replace(/_/g, ' ')} (${setup.assetName})
+⚡ <b>Action:</b> ${actionBadge}
+🎯 <b>Entry Price:</b> ₹${Number(setup.entryPrice).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+🛑 <b>Stop Loss:</b> ₹${Number(setup.stopLoss).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+🏁 <b>Target Price:</b> ₹${Number(setup.targetPrice).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+⚖️ <b>Risk-Reward Ratio:</b> ${setup.riskRewardRatio}
+📈 <b>Projected Return:</b> +${setup.projectedPnlPercent}%
+🧠 <b>Confidence Score:</b> ${setup.confidenceScore}% (Institutional Grade)
+⏱️ <b>Timeframe:</b> ${setup.timeframe}
+
+🔍 <b>Trigger Logic:</b>
+<i>${setup.triggerReason}</i>
+━━━━━━━━━━━━━━━━━━━━━━━━━━━
+⚙️ <i>ArthaPulse HFT Multi-Asset Engine • SEBI Compliance Notice</i>`;
+
+      const telegramUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
+      const response = await fetch(telegramUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: chatId,
+          text,
+          parse_mode: 'HTML',
+        }),
+      });
+
+      const responseData = await response.json();
+      if (!response.ok || !responseData.ok) {
+        return res.status(502).json({
+          error: responseData.description || 'Telegram API rejected message',
+          details: responseData,
+        });
+      }
+
+      res.json({
+        success: true,
+        messageId: responseData.result.message_id,
+        chatTitle: responseData.result.chat.title || responseData.result.chat.username,
+        dispatchedAt: new Date().toISOString(),
+      });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'Failed to dispatch quant telegram alert' });
     }
   });
 
