@@ -27,6 +27,11 @@ import {
   DEFAULT_CHAT_ID,
 } from './server/services/telegramService.js';
 import {
+  startAutoTelegramAlertEngine,
+  getAutoAlertStatus,
+  executeAutoAlertScan,
+} from './server/services/autoTelegramAlertService.js';
+import {
   getRealMarketTrends,
   syncRealMarketData,
   getRealHistoricalCandles,
@@ -568,6 +573,25 @@ async function startServer() {
     }
   });
 
+  // Automated Telegram BUY & SELL Alert Engine Endpoints
+  app.get('/api/alerts/telegram/auto-status', (req, res) => {
+    try {
+      const status = getAutoAlertStatus();
+      res.json(status);
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'Failed to fetch auto alert status' });
+    }
+  });
+
+  app.post('/api/alerts/telegram/auto-scan-now', async (req, res) => {
+    try {
+      const result = await executeAutoAlertScan();
+      res.json({ success: true, result });
+    } catch (err: any) {
+      res.status(500).json({ error: err.message || 'Failed to run auto alert scan' });
+    }
+  });
+
   // ==========================================
   // QUANTITATIVE HIGH-FREQUENCY ENGINE APIS
   // Covering Intraday, F&O, and Commodities (MCX)
@@ -801,6 +825,9 @@ async function startServer() {
 
   // Start background auto-responder for Telegram commands (/start, /signals, /predictions, /status)
   startTelegramBotPolling();
+
+  // Start background automated BUY & SELL alert engine (scanning Indian equities continuously)
+  startAutoTelegramAlertEngine();
 
   // Vite middleware for development vs static build in production
   if (process.env.NODE_ENV !== 'production') {

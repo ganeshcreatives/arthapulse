@@ -234,3 +234,6 @@ export function getMarketOverview(): MarketOverviewData {
     isDelayed: false,
   };
 }
+
+export const getCandles = getOrGenerateHistoricalCandles;
+export const getStockQuote = getStockBySymbol;

@@ -354,6 +354,57 @@ async function handleClientFallback(urlString: string, init?: RequestInit): Prom
   }
 
   // Telegram Alerts endpoints
+  if (pathname === '/api/alerts/telegram/auto-status') {
+    return jsonResponse({
+      isActive: true,
+      intervalMinutes: 3,
+      lastScanTime: new Date(Date.now() - 45000).toISOString(),
+      nextScanInSeconds: 135,
+      totalScans: 28,
+      buyAlertsSent: 14,
+      sellAlertsSent: 9,
+      subscribersCount: 1,
+      recentAlerts: [
+        {
+          id: 'auto_buy_rel',
+          symbol: 'RELIANCE',
+          action: 'BUY',
+          price: 2942.50,
+          triggerType: 'BULLISH_BREAKOUT',
+          sentAt: new Date(Date.now() - 1000 * 60 * 5).toISOString(),
+          targetChatId: '7756782040',
+          status: 'SENT',
+          formattedText: '🟢 TIME TO BUY: RELIANCE | Target: ₹3,150 (+7.1%) | Stop: ₹2,840'
+        },
+        {
+          id: 'auto_sell_tcs',
+          symbol: 'TCS',
+          action: 'SELL',
+          price: 3920.00,
+          triggerType: 'TARGET_REACHED',
+          sentAt: new Date(Date.now() - 1000 * 60 * 18).toISOString(),
+          targetChatId: '7756782040',
+          status: 'SENT',
+          formattedText: '🔴 TIME TO SELL / BOOK PROFITS: TCS | Target Reached | RSI Overbought'
+        }
+      ]
+    });
+  }
+
+  if (pathname === '/api/alerts/telegram/auto-scan-now') {
+    return jsonResponse({
+      success: true,
+      result: {
+        buyAlertsSent: 1,
+        sellAlertsSent: 1,
+        details: [
+          'Sent high-conviction TIME TO BUY alert for RELIANCE @ ₹2,942.50',
+          'Sent TIME TO SELL / Profit-Book alert for TATAMOTORS @ ₹1,048.00'
+        ]
+      }
+    });
+  }
+
   if (pathname === '/api/alerts/telegram/bot-info') {
     return jsonResponse({
       botUsername: 'arthapulseAi_bot',

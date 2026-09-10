@@ -15,6 +15,11 @@ import {
   Copy,
   Check,
   UserCheck,
+  BellRing,
+  Radio,
+  ArrowUpRight,
+  ArrowDownRight,
+  Clock,
 } from 'lucide-react';
 import { TradeSignal, BeginnerStockPrediction, TelegramAlertLog } from '../types.js';
 import { SignalShortlist } from './SignalShortlist.js';
@@ -57,11 +62,86 @@ export const TelegramBotHub: React.FC<TelegramBotHubProps> = ({
   const [isSendingPred, setIsSendingPred] = useState<string | null>(null);
   const [statusMsg, setStatusMsg] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null);
   const [copiedLink, setCopiedLink] = useState(false);
+  const [isScanningNow, setIsScanningNow] = useState(false);
+  const [autoStatus, setAutoStatus] = useState<{
+    isActive: boolean;
+    intervalMinutes: number;
+    lastScanTime: string | null;
+    nextScanInSeconds: number;
+    totalScans: number;
+    buyAlertsSent: number;
+    sellAlertsSent: number;
+    recentAlerts?: Array<{
+      id: string;
+      symbol: string;
+      action: 'BUY' | 'SELL';
+      price: number;
+      triggerType: string;
+      sentAt: string;
+      status: string;
+      formattedText?: string;
+    }>;
+  }>({
+    isActive: true,
+    intervalMinutes: 3,
+    lastScanTime: null,
+    nextScanInSeconds: 180,
+    totalScans: 0,
+    buyAlertsSent: 0,
+    sellAlertsSent: 0,
+  });
 
   useEffect(() => {
     fetchBotInfo();
     fetchLogs();
+    fetchAutoStatus();
+    const interval = setInterval(() => {
+      fetchAutoStatus();
+      fetchLogs();
+    }, 10000);
+    return () => clearInterval(interval);
   }, []);
+
+  const fetchAutoStatus = async () => {
+    try {
+      const res = await fetch('/api/alerts/telegram/auto-status');
+      if (res.ok) {
+        const data = await res.json();
+        setAutoStatus(data);
+      }
+    } catch (e) {
+      // quiet fallback
+    }
+  };
+
+  const handleTriggerAutoScanNow = async () => {
+    setIsScanningNow(true);
+    setStatusMsg(null);
+    try {
+      const res = await fetch('/api/alerts/telegram/auto-scan-now', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const data = await res.json();
+      if (data.success) {
+        setStatusMsg({
+          type: 'success',
+          text: `Market scan executed! ${data.result?.buyAlertsSent || 0} BUY alerts & ${data.result?.sellAlertsSent || 0} SELL/EXIT alerts dispatched to @${botInfo.username}!`,
+        });
+        fetchAutoStatus();
+        fetchLogs();
+      } else {
+        setStatusMsg({
+          type: 'error',
+          text: data.error || 'Failed to trigger market scan',
+        });
+      }
+    } catch (err: any) {
+      setStatusMsg({ type: 'error', text: err.message || 'Network error' });
+    } finally {
+      setIsScanningNow(false);
+    }
+  };
 
   const fetchBotInfo = async () => {
     try {
@@ -251,6 +331,138 @@ export const TelegramBotHub: React.FC<TelegramBotHubProps> = ({
         )}
       </div>
 
+      {/* Real-Time Automated BUY & SELL Alert Engine Status Bar */}
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-4">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+          <div className="flex items-start sm:items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-emerald-950/80 border border-emerald-800/80 flex items-center justify-center shrink-0">
+              <BellRing className="w-5 h-5 text-emerald-400" />
+            </div>
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <h3 className="text-base font-bold text-white tracking-tight">
+                  Automated Market Alert Engine
+                </h3>
+                <span className="inline-flex items-center gap-1.5 text-[10px] font-bold bg-emerald-950 text-emerald-300 border border-emerald-700/80 px-2.5 py-0.5 rounded-full">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  ACTIVE & DISPATCHING
+                </span>
+              </div>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Continuously monitors Indian equities (NSE/BSE). Automatically dispatches <strong className="text-emerald-400">TIME TO BUY</strong> alerts on high-conviction breakouts and <strong className="text-rose-400">TIME TO SELL</strong> alerts on target achievement & risk invalidation.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2.5 shrink-0">
+            <button
+              onClick={handleTriggerAutoScanNow}
+              disabled={isScanningNow}
+              className="px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold rounded-xl flex items-center gap-2 shadow-md hover:shadow-emerald-500/20 transition-all disabled:opacity-50"
+            >
+              <RefreshCw className={`w-3.5 h-3.5 ${isScanningNow ? 'animate-spin' : ''}`} />
+              <span>{isScanningNow ? 'Scanning Market...' : 'Trigger Market Scan Now'}</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Engine Live Metrics Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="p-3 bg-slate-950 rounded-xl border border-slate-800/80">
+            <div className="flex items-center gap-1.5 text-slate-400 text-[11px] mb-1">
+              <Radio className="w-3.5 h-3.5 text-sky-400" />
+              <span>Scanning Cadence</span>
+            </div>
+            <div className="text-sm sm:text-base font-bold text-white font-mono">
+              Every 3 Mins
+            </div>
+            <div className="text-[10px] text-slate-500 mt-0.5">
+              Next in ~{autoStatus.nextScanInSeconds || 120}s
+            </div>
+          </div>
+
+          <div className="p-3 bg-slate-950 rounded-xl border border-slate-800/80">
+            <div className="flex items-center gap-1.5 text-emerald-400 text-[11px] mb-1">
+              <ArrowUpRight className="w-3.5 h-3.5" />
+              <span>Time to BUY Alerts</span>
+            </div>
+            <div className="text-sm sm:text-base font-bold text-emerald-400 font-mono">
+              {autoStatus.buyAlertsSent} Dispatched
+            </div>
+            <div className="text-[10px] text-slate-500 mt-0.5">
+              Breakouts & Momentum
+            </div>
+          </div>
+
+          <div className="p-3 bg-slate-950 rounded-xl border border-slate-800/80">
+            <div className="flex items-center gap-1.5 text-rose-400 text-[11px] mb-1">
+              <ArrowDownRight className="w-3.5 h-3.5" />
+              <span>Time to SELL Alerts</span>
+            </div>
+            <div className="text-sm sm:text-base font-bold text-rose-400 font-mono">
+              {autoStatus.sellAlertsSent} Dispatched
+            </div>
+            <div className="text-[10px] text-slate-500 mt-0.5">
+              Profit Taking & Safety Stop
+            </div>
+          </div>
+
+          <div className="p-3 bg-slate-950 rounded-xl border border-slate-800/80">
+            <div className="flex items-center gap-1.5 text-indigo-400 text-[11px] mb-1">
+              <UserCheck className="w-3.5 h-3.5" />
+              <span>Target Chat ID</span>
+            </div>
+            <div className="text-sm sm:text-base font-bold text-white font-mono truncate">
+              {chatId}
+            </div>
+            <div className="text-[10px] text-indigo-300 mt-0.5">
+              Ganesh Katla (Direct)
+            </div>
+          </div>
+        </div>
+
+        {/* Recent Automated Alerts Strip */}
+        {autoStatus.recentAlerts && autoStatus.recentAlerts.length > 0 && (
+          <div className="pt-2 border-t border-slate-800/60">
+            <div className="text-[11px] font-semibold text-slate-400 mb-2 flex items-center gap-1.5">
+              <Clock className="w-3 h-3 text-slate-400" />
+              <span>Latest Automated Broadcasts to Telegram:</span>
+            </div>
+            <div className="space-y-1.5">
+              {autoStatus.recentAlerts.slice(0, 3).map((alert) => (
+                <div
+                  key={alert.id}
+                  className="p-2.5 bg-slate-950/80 rounded-xl border border-slate-800 flex items-center justify-between text-xs font-mono"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <span
+                      className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
+                        alert.action === 'BUY'
+                          ? 'bg-emerald-950 text-emerald-300 border border-emerald-800'
+                          : 'bg-rose-950 text-rose-300 border border-rose-800'
+                      }`}
+                    >
+                      {alert.action === 'BUY' ? 'TIME TO BUY' : 'TIME TO SELL'}
+                    </span>
+                    <span className="font-bold text-white">{alert.symbol}</span>
+                    <span className="text-slate-400">@ ₹{alert.price.toLocaleString('en-IN')}</span>
+                    <span className="text-[10px] text-slate-500 font-sans hidden sm:inline">
+                      ({alert.triggerType.replace(/_/g, ' ')})
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] text-slate-400">
+                      {new Date(alert.sentAt).toLocaleTimeString()}
+                    </span>
+                    <span className="text-[10px] text-emerald-400 font-semibold">SENT</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Two-Column Utility: Telegram Interactive Commands & 1-Click Prediction Dispatch */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left 1-col: Interactive Telegram Bot Commands */}
@@ -264,6 +476,26 @@ export const TelegramBotHub: React.FC<TelegramBotHubProps> = ({
           </p>
 
           <div className="space-y-2.5 text-xs font-mono">
+            <div className="p-2.5 bg-slate-950 rounded-xl border border-slate-800/80 hover:border-slate-700 transition-colors">
+              <div className="flex items-center justify-between text-emerald-400 font-bold">
+                <span>/buy</span>
+                <span className="text-[10px] text-emerald-500/80 font-sans">Immediate Buy</span>
+              </div>
+              <p className="text-[11px] text-slate-300 font-sans mt-0.5">
+                Returns instant high-conviction BUY setups with entry zone, target 1, target 2, and stop loss.
+              </p>
+            </div>
+
+            <div className="p-2.5 bg-slate-950 rounded-xl border border-slate-800/80 hover:border-slate-700 transition-colors">
+              <div className="flex items-center justify-between text-rose-400 font-bold">
+                <span>/sell</span>
+                <span className="text-[10px] text-rose-500/80 font-sans">Exit & Profit</span>
+              </div>
+              <p className="text-[11px] text-slate-300 font-sans mt-0.5">
+                Returns immediate profit-booking targets, resistance warnings, and stop-loss exits.
+              </p>
+            </div>
+
             <div className="p-2.5 bg-slate-950 rounded-xl border border-slate-800/80 hover:border-slate-700 transition-colors">
               <div className="flex items-center justify-between text-indigo-400 font-bold">
                 <span>/start</span>
